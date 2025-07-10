@@ -1,10 +1,10 @@
 package com.EduHub.Eduhub.Service.Impl;
 
-import com.EduHub.Eduhub.Dto.ForgotPassWordRequest;
 import com.EduHub.Eduhub.Dto.LoginRequest;
 import com.EduHub.Eduhub.Dto.RegisterStudentRequest;
 import com.EduHub.Eduhub.Entity.StudentEntity;
 import com.EduHub.Eduhub.Repository.StudentRepo;
+import com.EduHub.Eduhub.Service.OtpService;
 import com.EduHub.Eduhub.Service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,9 +22,12 @@ public class StudentServiceImp implements StudentService {
     @Autowired
     public final StudentRepo studentRepo;
 
+    @Autowired
+    private OtpService otpService;
+
     @Override
     public StudentEntity createStudent(RegisterStudentRequest request) {
-        if(studentRepo.existsByRollNumber(request.getRollNumber())){
+        if(studentRepo.findByEmail(request.getEmail()).isPresent()){
             throw new RuntimeException("Student Already Exists");
         }
 
@@ -38,19 +40,9 @@ public class StudentServiceImp implements StudentService {
 
         StudentEntity student = new StudentEntity();
         student.setName(request.getName());
-        student.setRollNumber(request.getRollNumber());
         student.setEmail(request.getEmail());
         student.setPassword(hashedPassword);
-        student.setAddress(request.getAddress());
-        student.setGender(request.getGender());
-        student.setDate_of_birth(request.getDate_of_birth());
-        student.setPhoneNo(request.getPhoneNo());
-        student.setCourse(request.getCourse());
-        student.setDepartment(request.getDepartment());
-        student.setStatus(request.getStatus());
 
-        student.setCreatedAt(LocalDateTime.now());
-        student.setUpdatedAt(LocalDateTime.now());
 
         return studentRepo.save(student);
 
@@ -70,7 +62,7 @@ public class StudentServiceImp implements StudentService {
 
     @Override
     public String loginStudent(LoginRequest request) {
-        StudentEntity student = (StudentEntity) studentRepo.findByEmail(request.getEmail())
+        StudentEntity student =  studentRepo.findByEmail(request.getEmail())
                 .orElseThrow(()->  new RuntimeException("Invalid Email" + request.getEmail()));
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -83,18 +75,38 @@ public class StudentServiceImp implements StudentService {
     }
 
     @Override
-    public ResponseEntity<StudentEntity> forgotPassword(ForgotPassWordRequest request) {
-        StudentEntity student = (StudentEntity) studentRepo.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Student Email Not Found" + request.getEmail()));
-
-        if (request.getNewpassword() == null || request.getNewpassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("New password must not be null or empty");
+    public ResponseEntity<String> sendOtpToEmail(String email) {
+        if (!studentRepo.existsByEmail(email)) {
+            return ResponseEntity.badRequest().body("Email not found");
         }
 
-        String passwordEncoder = new BCryptPasswordEncoder().encode(request.getNewpassword());
-        student.setPassword(passwordEncoder);
+        String otp = otpService.generateOtp(email);
+
+        // Simulate sending email (or later integrate email service)
+        System.out.println("OTP for " + email + " is: " + otp);
+
+        return ResponseEntity.ok("OTP sent to your email");
+    }
+
+    @Override
+    public ResponseEntity<String> verifyOtp(String email, String otp) {
+        return otpService.verifyOtp(email, otp);
+    }
+
+    @Override
+    public ResponseEntity<String> resetPassword(String email, String newPassword) {
+        StudentEntity student = studentRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Student not found with email: " + email));
+
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("New password must not be empty");
+        }
+
+        String encodedPassword = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(newPassword);
+        student.setPassword(encodedPassword);
         studentRepo.save(student);
 
-        return ResponseEntity.ok(student);
+        return ResponseEntity.ok("Password updated successfully");
     }
+
 }

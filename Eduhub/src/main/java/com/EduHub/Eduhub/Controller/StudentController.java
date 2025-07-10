@@ -1,6 +1,5 @@
 package com.EduHub.Eduhub.Controller;
 
-import com.EduHub.Eduhub.Dto.ForgotPassWordRequest;
 import com.EduHub.Eduhub.Dto.LoginRequest;
 import com.EduHub.Eduhub.Entity.StudentEntity;
 import com.EduHub.Eduhub.Dto.RegisterStudentRequest;
@@ -11,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/students")  // root path
@@ -43,8 +43,20 @@ public class StudentController {
         return "Student Login Successfully";
     }
 
-    @PutMapping("/forgotten-Password")
-    public ResponseEntity<StudentEntity> forgotPassword(@RequestBody ForgotPassWordRequest request){
-        return studentService.forgotPassword(request);
+    @PostMapping("/student/send-otp")
+    public ResponseEntity<String> sendOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        return studentService.sendOtpToEmail(email);
+    }
+
+
+    @PostMapping("/student/verify-otp")
+    public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        return studentService.verifyOtp(email, otp);
+    }
+
+    @PostMapping("/student/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String email, @RequestParam String newPassword) {
+        return studentService.resetPassword(email, newPassword);
     }
 }

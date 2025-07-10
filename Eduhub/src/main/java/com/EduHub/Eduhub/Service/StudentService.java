@@ -1,6 +1,5 @@
 package com.EduHub.Eduhub.Service;
 
-import com.EduHub.Eduhub.Dto.ForgotPassWordRequest;
 import com.EduHub.Eduhub.Dto.LoginRequest;
 import com.EduHub.Eduhub.Dto.RegisterStudentRequest;
 import com.EduHub.Eduhub.Entity.StudentEntity;
@@ -17,5 +16,11 @@ public interface StudentService {
 
     String loginStudent(LoginRequest request);
 
-    ResponseEntity<StudentEntity> forgotPassword(ForgotPassWordRequest request);
+    ResponseEntity<String> sendOtpToEmail(String email);
+
+//    ResponseEntity<String> sendOtpToEmail(String email);
+//
+    ResponseEntity<String> verifyOtp(String email, String otp);
+//
+    ResponseEntity<String> resetPassword(String email, String newPassword);
 }

@@ -19,23 +19,9 @@ public class StudentEntity {
     @Column(unique = true)
     private Long id;
 
-    @Column(name = "roll_number",nullable = false, unique = true)
-    private Long rollNumber;
     private String name;
     private String email;
     private String password;
-    private String PhoneNo;
-    private String address;
-    private String gender;
-    private LocalDate date_of_birth;
-    private String course;
-    private String department;
-    private String status;
 
-    @Timestamp
-    private LocalDateTime createdAt;
-
-    @Timestamp
-    private LocalDateTime updatedAt;
 }
 
